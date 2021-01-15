@@ -1,0 +1,22 @@
+//Queries with repeat info
+//with Average Duration and Total Duration
+//By Source and day
+//Workload classified with case statement using simple rule for user name
+//REQUIRES: Audit
+
+let QueryString = "searchstring";
+let DatabaseName = "synapse-pool-name";
+AzureDiagnostics
+| where Category == 'SQLSecurityAuditEvents'
+| where duration_milliseconds_d > 0
+| where action_name_s in ("BATCH COMPLETED")
+| where Resource == DatabaseName
+| where statement_s has QueryString
+| extend Workload = case (database_principal_name_s !hasprefix 'prod', 'User'  ,'Engineering')
+| extend Duration = round(duration_milliseconds_d /1000.0)
+| where Duration > 1
+| extend query = statement_s, QuerySource = application_name_s
+| summarize TotalDurationSeconds = sum(Duration),MaxDurationSeconds = max(Duration),MinDurationSeconds = min(Duration), StDevDurSeconds = round(stdev(Duration)), CountQuery = count(Duration) by QuerySource, query, Workload, TimeSlice = bin(event_time_t, 1d)
+| extend AvgDuration = round(TotalDurationSeconds/CountQuery,0)
+| order by AvgDuration desc
+| limit 20

@@ -1,0 +1,28 @@
+//Queries with Duration
+//NOTE: Lots more queries show up here compared to Audit
+//REQUIRES: ExecRequests
+
+let DatabaseName = "synapse_name";
+let requestid = AzureDiagnostics
+| where ResourceProvider == "MICROSOFT.SQL" 
+| where Category == "ExecRequests" and StatementType_s != 'Batch' 
+    and StatementType_s !in ("Execute", "Batch","DropExternalTable", "DropExternalDataSource", "DropCredential",  "DropExternalFileFormat", "SetStatement",
+                "Print", "CreateCredential"," BeginTransaction", "Commit", "CreateExternalDataSource", "CreateExternalFileFormat",  "CreateExternalTable")  
+| where Resource == DatabaseName
+| where isnotempty(Command_s) 
+| summarize by Query= Command_s , RequestId_s;
+requestid
+| join kind = inner 
+(
+    AzureDiagnostics
+    | where ResourceProvider == "MICROSOFT.SQL" 
+    | where Resource == DatabaseName
+    | where Category == "ExecRequests" 
+            and Status_s in ("Cancelled", "Failed", "Completed") 
+            and StartTime_t >= todatetime('2020-01-01' )
+) on RequestId_s
+| extend ResClass = ResourceClass_s
+| project Duration = round((datetime_diff('Millisecond', EndTime_t, StartTime_t)/1000.0),2), StartTime= StartTime_t, EndTime=EndTime_t
+    , RequestId= RequestId_s,SessionId = SessionId_s, Query, StatementType_s, Duration_ms = datetime_diff('Millisecond', EndTime_t, StartTime_t)
+| where Duration_ms > 750
+| summarize TotalDuration = sum(Duration), AvgDuration = avg(Duration), QueryCount = count(RequestId) by QueryType = StatementType_s, BinEndHour = bin(EndTime, 1h)

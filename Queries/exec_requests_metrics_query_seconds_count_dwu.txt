@@ -1,0 +1,36 @@
+//Succeeded Queries with Duration
+//By Source and time
+//Workload classified with case statement using simple rule for user name
+//NOTE: Lots more queries show up here compared to Audit
+//REQUIRES: ExecRequests, Metric (Basic)
+
+let DatabaseName = "synapse_name";
+let requestid = AzureDiagnostics
+| where ResourceProvider == "MICROSOFT.SQL" 
+| where Category == "ExecRequests" and StatementType_s != 'Batch' 
+    and StatementType_s !in ("Execute", "Batch","DropExternalTable", "DropExternalDataSource", "DropCredential",  "DropExternalFileFormat", "SetStatement",
+                "Print", "CreateCredential"," BeginTransaction", "Commit", "CreateExternalDataSource", "CreateExternalFileFormat",  "CreateExternalTable")  
+| where Resource == DatabaseName
+| where isnotempty(Command_s) 
+| summarize by Query= Command_s , RequestId_s;
+let querydetail = AzureDiagnostics
+    | where ResourceProvider == "MICROSOFT.SQL" 
+    | where Resource == DatabaseName
+    | where Category == "ExecRequests" 
+            and Status_s in ("Cancelled", "Failed", "Completed") 
+            and StartTime_t >= todatetime('2020-01-01' );
+let dwu_prov = AzureMetrics
+| where ResourceProvider =='MICROSOFT.SQL' and MetricName == 'dwu_limit'
+| extend DWUsage = Maximum  
+| summarize max(DWUsage) by Resource, TimeSlice = bin(TimeGenerated, 1h);            
+requestid
+| join kind = inner 
+    querydetail on RequestId_s
+| extend ResClass = ResourceClass_s
+| project Duration = round((datetime_diff('Millisecond', EndTime_t, StartTime_t)/1000.0),2), StartTime= StartTime_t, EndTime=EndTime_t
+    , RequestId= RequestId_s,SessionId = SessionId_s, Query, StatementType_s, Duration_ms = datetime_diff('Millisecond', EndTime_t, StartTime_t)
+| where Duration_ms > 750
+| summarize TotalDuration = sum(Duration), AvgDuration = avg(Duration), QueryCount = count(RequestId) by QueryType = StatementType_s, TimeSlice = bin(EndTime, 1h)
+| join kind=inner 
+    dwu_prov on TimeSlice
+| project Resource, TimeSlice, QueryType, TotalDuration, AvgDuration, QueryCount, DWUMax
