@@ -29,7 +29,7 @@ Diagnostic logs include details of all the DMVs as well as metrics about the dat
 
 Users can use various methods to consume this information
 - Workbooks (portal)
-- Logs viewer (portal)
+- Logs viewer (portal) - [list of queries] (./query_list.md)
 - PowerBI
 
 
