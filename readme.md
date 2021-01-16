@@ -2,6 +2,14 @@
 
 Synapse has powerful, simple to implement integration with Log Analytics
 
+**Contents**
+- Why is this useful
+- What can be logged
+- How do we display this information
+    - Workbooks (portal)
+    - Logs viewer (portal) - [list of queries](./query_list.md)
+    - PowerBI
+
 ## Why is this useful
 
 Data Management Views (DMVs) in Synapse are very useful in understanding workload, however it many of the underlying datasets only retain the most recent 10k rows, which in busy systems means that current data will expire within hours or days. Log Analytics allows long term retention of this data and trend analysis
@@ -29,7 +37,5 @@ Diagnostic logs include details of all the DMVs as well as metrics about the dat
 
 Users can use various methods to consume this information
 - Workbooks (portal)
-- Logs viewer (portal) - [list of queries] (./query_list.md)
+- Logs viewer (portal) - [list of queries](./query_list.md)
 - PowerBI
-
-
