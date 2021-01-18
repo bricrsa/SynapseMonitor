@@ -7,7 +7,7 @@ Synapse has powerful, simple to implement integration with Log Analytics
 - What can be logged
 - How do we display this information
     - Workbooks (portal)
-    - Logs viewer (portal) - [list of queries](./query_list.md)
+    - Logs viewer (portal) - [list of queries](./Queries/readme.md)
     - PowerBI
 
 ## Why is this useful
@@ -37,5 +37,5 @@ Diagnostic logs include details of all the DMVs as well as metrics about the dat
 
 Users can use various methods to consume this information
 - Workbooks (portal)
-- Logs viewer (portal) - [list of queries](./query_list.md)
+- Logs viewer (portal) - [list of queries](./readme.md)
 - PowerBI
