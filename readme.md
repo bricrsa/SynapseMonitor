@@ -2,13 +2,14 @@
 
 Synapse has powerful, simple to implement integration with Log Analytics
 
-**Contents**
-- Why is this useful
-- What can be logged
-- How do we display this information
+## **Contents**
+- [Why is this useful](#why-is-this-useful)
+- [What can be logged](#what-can-be-logged)
+- [How can this information be displayed](#how-can-this-information-be-displayed)
     - [Workbooks](./Workbooks/readme.md) (portal)
     - Logs viewer (portal) - [list of queries](./Queries/readme.md)
     - PowerBI
+- [How is data captured to Log Analytics](#how-is-data-captured-to-log-analytics)
 
 ## Why is this useful
 
@@ -33,7 +34,7 @@ Diagnostic logs include details of all the DMVs as well as metrics about the dat
     - InstanceAndAppAdvanced
     - WorkloadManagement
 
-## How do display this information be displayed
+## How can this information be displayed
 
 Users can use various methods to consume this information
 - [Workbooks](./Workbooks/readme.md) (portal) 
