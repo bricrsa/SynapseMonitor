@@ -6,7 +6,7 @@ Synapse has powerful, simple to implement integration with Log Analytics
 - Why is this useful
 - What can be logged
 - How do we display this information
-    - Workbooks (portal)
+    - [Workbooks](./Workbooks/readme.md) (portal)
     - Logs viewer (portal) - [list of queries](./Queries/readme.md)
     - PowerBI
 
