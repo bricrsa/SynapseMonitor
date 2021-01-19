@@ -33,9 +33,18 @@ Diagnostic logs include details of all the DMVs as well as metrics about the dat
     - InstanceAndAppAdvanced
     - WorkloadManagement
 
-## How do we display this information
+## How do display this information be displayed
 
 Users can use various methods to consume this information
 - [Workbooks](./Workbooks/readme.md) (portal) 
 - Logs viewer (portal) - [list of queries](./Queries/readme.md)
 - PowerBI
+
+## How is data captured to Log Analytics
+
+For Audit logs (including username and summary query information)
+![](./media/auditing.png)
+
+For Diagnostic logs (including metric and detailed query information)
+![](./media/diagnostic_settings.png)
+
