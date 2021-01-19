@@ -1,0 +1,546 @@
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 1,
+      "content": {
+        "json": "## Synapse Workload Understanding\r\n"
+      },
+      "name": "text - 7"
+    },
+    {
+      "type": 9,
+      "content": {
+        "version": "KqlParameterItem/1.0",
+        "parameters": [
+          {
+            "id": "12e24ac4-d5f3-42ec-9c32-118fd5438150",
+            "version": "KqlParameterItem/1.0",
+            "name": "TimeRange",
+            "label": "Time Range",
+            "type": 4,
+            "isRequired": true,
+            "value": {
+              "durationMs": 604800000
+            },
+            "typeSettings": {
+              "selectableValues": [
+                {
+                  "durationMs": 300000
+                },
+                {
+                  "durationMs": 900000
+                },
+                {
+                  "durationMs": 1800000
+                },
+                {
+                  "durationMs": 3600000
+                },
+                {
+                  "durationMs": 14400000
+                },
+                {
+                  "durationMs": 43200000
+                },
+                {
+                  "durationMs": 86400000
+                },
+                {
+                  "durationMs": 172800000
+                },
+                {
+                  "durationMs": 259200000
+                },
+                {
+                  "durationMs": 604800000
+                },
+                {
+                  "durationMs": 1209600000
+                },
+                {
+                  "durationMs": 2419200000
+                },
+                {
+                  "durationMs": 2592000000
+                },
+                {
+                  "durationMs": 5184000000
+                },
+                {
+                  "durationMs": 7776000000
+                }
+              ]
+            }
+          },
+          {
+            "id": "0e436846-5a0f-49ac-a53c-255fad6a068a",
+            "version": "KqlParameterItem/1.0",
+            "name": "TrendTimeRange",
+            "label": "Trend Time Range",
+            "type": 4,
+            "isRequired": true,
+            "value": {
+              "durationMs": 604800000
+            },
+            "typeSettings": {
+              "selectableValues": [
+                {
+                  "durationMs": 86400000
+                },
+                {
+                  "durationMs": 172800000
+                },
+                {
+                  "durationMs": 259200000
+                },
+                {
+                  "durationMs": 604800000
+                },
+                {
+                  "durationMs": 1209600000
+                },
+                {
+                  "durationMs": 2419200000
+                },
+                {
+                  "durationMs": 2592000000
+                },
+                {
+                  "durationMs": 5184000000
+                }
+              ]
+            }
+          },
+          {
+            "id": "996e14b3-a004-4939-bc43-c0784b682b37",
+            "version": "KqlParameterItem/1.0",
+            "name": "dbname",
+            "label": "Database Name",
+            "type": 2,
+            "isRequired": true,
+            "query": "let resource_audit = AzureDiagnostics\r\n| where Category == 'SQLSecurityAuditEvents'\r\n| summarize by Resource;\r\nlet resource_execr = AzureDiagnostics\r\n| where ResourceProvider == \"MICROSOFT.SQL\" and Category == \"ExecRequests\"\r\n| summarize by Resource;\r\nunion \r\nresource_audit,\r\nresource_execr\r\n| where Resource != 'MASTER'\r\n| summarize by Resource\r\n",
+            "value": "MS-SQL-ADVENTUREWORKS279",
+            "typeSettings": {
+              "additionalResourceOptions": []
+            },
+            "timeContext": {
+              "durationMs": 0
+            },
+            "timeContextFromParameter": "TrendTimeRange",
+            "queryType": 0,
+            "resourceType": "microsoft.operationalinsights/workspaces"
+          },
+          {
+            "id": "a57074fd-453a-49f0-b0f0-f0d16b6c2fd3",
+            "version": "KqlParameterItem/1.0",
+            "name": "UserFocus",
+            "label": "User Focus",
+            "type": 2,
+            "isRequired": true,
+            "query": "AzureDiagnostics\r\n| where Category == 'SQLSecurityAuditEvents' and Resource == \"{dbname}\" \r\n| summarize by server_principal_name_s",
+            "value": "brcooper@microsoft.com",
+            "typeSettings": {
+              "additionalResourceOptions": [],
+              "showDefault": false
+            },
+            "timeContext": {
+              "durationMs": 604800000
+            },
+            "timeContextFromParameter": "TrendTimeRange",
+            "queryType": 0,
+            "resourceType": "microsoft.operationalinsights/workspaces"
+          }
+        ],
+        "style": "pills",
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces"
+      },
+      "name": "parameters - 6"
+    },
+    {
+      "type": 11,
+      "content": {
+        "version": "LinkItem/1.0",
+        "style": "tabs",
+        "links": [
+          {
+            "id": "4c1fbdef-472f-4473-ac94-14ef35a86099",
+            "cellValue": "selectedTab",
+            "linkTarget": "parameter",
+            "linkLabel": "Query Details",
+            "subTarget": "QueryDetails",
+            "style": "link"
+          },
+          {
+            "id": "bb2403af-73e0-44f5-b3b3-e1ea96bd19af",
+            "cellValue": "selectedTab",
+            "linkTarget": "parameter",
+            "linkLabel": "User Query Activity",
+            "subTarget": "UserDetails",
+            "style": "link"
+          }
+        ]
+      },
+      "name": "links - 5",
+      "styleSettings": {
+        "showBorder": true
+      }
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "AzureDiagnostics\r\n| where Category == 'SQLSecurityAuditEvents' and Resource == \"{dbname}\"\r\n| where duration_milliseconds_d > 0\r\n| extend duration_seconds = duration_milliseconds_d /1000.0\r\n| where statement_s != 'select @@version'\r\n| where statement_s != 'SELECT @@SPID;'\r\n| where server_principal_name_s == '{UserFocus}'\r\n| project server_principal_name_s, succeeded_s, event_time_t, LogicalServerName_s, duration_milliseconds_d, duration_seconds, affected_rows_d, statement_s, application_name_s\r\n| summarize duration_seconds = round(sum(duration_seconds)) , query_count = count(statement_s) by EventDay = bin(event_time_t,1d), UserName = server_principal_name_s, QuerySource = application_name_s \r\n| order by EventDay, duration_seconds desc",
+        "size": 1,
+        "showAnalytics": true,
+        "title": "Trend Query Summary -  Selected User focus - {UserFocus}",
+        "timeContext": {
+          "durationMs": 604800000
+        },
+        "timeContextFromParameter": "TrendTimeRange",
+        "showExportToExcel": true,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "gridSettings": {
+          "formatters": [
+            {
+              "columnMatch": "EventDay",
+              "formatter": 1,
+              "numberFormat": {
+                "unit": 0,
+                "options": {
+                  "style": "decimal",
+                  "useGrouping": false
+                }
+              }
+            },
+            {
+              "columnMatch": "Trend",
+              "formatter": 9,
+              "formatOptions": {
+                "palette": "blue"
+              }
+            }
+          ]
+        }
+      },
+      "conditionalVisibility": {
+        "parameterName": "selectedTab",
+        "comparison": "isEqualTo",
+        "value": "QueryDetails"
+      },
+      "showPin": true,
+      "name": "TotalQuerySeconds - UserFocus"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "AzureDiagnostics\r\n| where Category == 'SQLSecurityAuditEvents' and Resource == \"{dbname}\"\r\n| where duration_milliseconds_d > 0\r\n| extend duration_seconds = duration_milliseconds_d /1000.0\r\n| where statement_s != 'select @@version'\r\n| where statement_s != 'SELECT @@SPID;'\r\n| where server_principal_name_s == '{UserFocus}'\r\n| project DatabaseName= database_name_s, UserName= server_principal_name_s, EventTime= event_time_t, Host= host_name_s, duration_seconds = round(duration_seconds), Query = statement_s, QuerySource = application_name_s \r\n| project-reorder DatabaseName, UserName, Host, EventTime, duration_seconds, Query, QuerySource\r\n| order by duration_seconds desc\r\n| take 200",
+        "size": 1,
+        "showAnalytics": true,
+        "title": "All Queries - Selected User Focus - {UserFocus}",
+        "timeContext": {
+          "durationMs": 604800000
+        },
+        "timeContextFromParameter": "TimeRange",
+        "showExportToExcel": true,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "table",
+        "gridSettings": {
+          "formatters": [
+            {
+              "columnMatch": "EventTime",
+              "formatter": 1
+            }
+          ]
+        },
+        "sortBy": []
+      },
+      "conditionalVisibility": {
+        "parameterName": "selectedTab",
+        "comparison": "isEqualTo",
+        "value": "QueryDetails"
+      },
+      "customWidth": "100",
+      "showPin": true,
+      "name": "All Queries"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "AzureDiagnostics\r\n| where Category == 'SQLSecurityAuditEvents' and Resource == \"{dbname}\"\r\n| where duration_milliseconds_d > 0\r\n| extend duration_seconds = duration_milliseconds_d /1000.0\r\n| where statement_s != 'select @@version'\r\n| where statement_s != 'SELECT @@SPID;'\r\n| where database_principal_name_s !hasprefix 'prod'\r\n//| project server_principal_name_s, succeeded_s, event_time_t, LogicalServerName_s, duration_milliseconds_d, duration_seconds, affected_rows_d, statement_s ,host_name_s, server_instance_name_s, database_name_s\r\n| summarize duration_seconds = round(sum(duration_seconds)) , query_count = count(statement_s), row_count = sum(affected_rows_d) by EventDay = bin(event_time_t,1d), UserName = server_principal_name_s, DatabaseName = database_name_s, Host = host_name_s\r\n| project-reorder DatabaseName, UserName, EventDay, Host, query_count, duration_seconds, row_count\r\n| order by duration_seconds desc\r\n",
+        "size": 1,
+        "showAnalytics": true,
+        "title": "User Daily Details",
+        "timeContext": {
+          "durationMs": 604800000
+        },
+        "timeContextFromParameter": "TimeRange",
+        "showExportToExcel": true,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "gridSettings": {
+          "formatters": [
+            {
+              "columnMatch": "query_count",
+              "formatter": 0,
+              "numberFormat": {
+                "unit": 0,
+                "options": {
+                  "style": "decimal",
+                  "useGrouping": true
+                }
+              }
+            },
+            {
+              "columnMatch": "duration_seconds",
+              "formatter": 0,
+              "numberFormat": {
+                "unit": 0,
+                "options": {
+                  "style": "decimal",
+                  "useGrouping": true
+                }
+              }
+            },
+            {
+              "columnMatch": "row_count",
+              "formatter": 0,
+              "numberFormat": {
+                "unit": 0,
+                "options": {
+                  "style": "decimal",
+                  "useGrouping": true
+                }
+              }
+            }
+          ]
+        }
+      },
+      "conditionalVisibility": {
+        "parameterName": "selectedTab",
+        "comparison": "isEqualTo",
+        "value": "UserDetails"
+      },
+      "customWidth": "100",
+      "showPin": true,
+      "name": "UserDatails"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "AzureDiagnostics\r\n| where Category == 'SQLSecurityAuditEvents' and Resource == \"{dbname}\"\r\n| where duration_milliseconds_d > 0\r\n| where TimeGenerated {TrendTimeRange}\r\n| extend Duration = round(duration_milliseconds_d /1000.0)\r\n| where Duration >10\r\n| extend Duration_bin = case(Duration <= 60, tostring(bin(Duration,10)), Duration <= 600, tostring(bin(Duration,60)), tostring(bin(Duration,600)))\r\n| summarize QueryCount = count(TimeGenerated) by Duration_bin, EventTime = bin(event_time_t, 1h)",
+        "size": 0,
+        "showAnalytics": true,
+        "title": "Trend Total Counts - by Duration bin (>10 seconds duration)",
+        "timeContext": {
+          "durationMs": 604800000
+        },
+        "timeContextFromParameter": "TrendTimeRange",
+        "showExportToExcel": true,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "barchart"
+      },
+      "conditionalVisibility": {
+        "parameterName": "selectedTab",
+        "comparison": "isEqualTo",
+        "value": "UserDetails"
+      },
+      "customWidth": "100",
+      "showPin": true,
+      "name": "TotalQuerycountBins - Eng"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "AzureDiagnostics\r\n| where Category == 'SQLSecurityAuditEvents'  and Resource == \"{dbname}\" \r\n| where duration_milliseconds_d > 0\r\n| where TimeGenerated {TrendTimeRange}\r\n| extend Duration = round(duration_milliseconds_d /1000.0)\r\n| where Duration >10\r\n| extend Duration_bin = case(Duration <= 60, tostring(bin(Duration,10)), Duration <= 600, tostring(bin(Duration,60)), tostring(bin(Duration,600)))\r\n| summarize QueryCount = count(TimeGenerated) by Duration_bin, EventTime = bin(event_time_t, 1d)",
+        "size": 0,
+        "showAnalytics": true,
+        "title": "Trend Total Counts Daily - by Duration bin (>10 seconds duration)",
+        "timeContext": {
+          "durationMs": 604800000
+        },
+        "timeContextFromParameter": "TrendTimeRange",
+        "showExportToExcel": true,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "barchart"
+      },
+      "conditionalVisibility": {
+        "parameterName": "selectedTab",
+        "comparison": "isEqualTo",
+        "value": "UserDetails"
+      },
+      "customWidth": "100",
+      "showPin": true,
+      "name": "TotalQuerycountBins - Eng - Copy"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "AzureDiagnostics\r\n| where Category == 'SQLSecurityAuditEvents' and Resource == \"{dbname}\"\r\n| where duration_milliseconds_d > 0\r\n| where TimeGenerated {TrendTimeRange}\r\n| extend Duration = round(duration_milliseconds_d /1000.0)\r\n| where server_principal_name_s == '{UserFocus}'\r\n| where Duration >10\r\n| extend Duration_bin = case(Duration <= 60, tostring(bin(Duration,10)), Duration <= 600, tostring(bin(Duration,60)), tostring(bin(Duration,1200)))\r\n| summarize QueryCount = count(TimeGenerated) by Duration_bin, EventTime = bin(event_time_t, 15m)",
+        "size": 0,
+        "showAnalytics": true,
+        "title": "Total Query Counts - Selected User by Duration bin (>10 seconds duration) - {UserFocus}",
+        "timeContext": {
+          "durationMs": 604800000
+        },
+        "timeContextFromParameter": "TimeRange",
+        "showExportToExcel": true,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "barchart"
+      },
+      "conditionalVisibility": {
+        "parameterName": "selectedTab",
+        "comparison": "isEqualTo",
+        "value": "QueryDetails"
+      },
+      "customWidth": "100",
+      "showPin": true,
+      "name": "TotalQuerycountBins - User - Copy"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "AzureDiagnostics\r\n| where Category == 'SQLSecurityAuditEvents'  and Resource == \"{dbname}\" \r\n| where duration_milliseconds_d > 0\r\n| where TimeGenerated {TrendTimeRange}\r\n| extend Duration = round(duration_milliseconds_d /1000.0)\r\n| where server_principal_name_s == '{UserFocus}'\r\n| where Duration <10\r\n| summarize QueryCount = count(TimeGenerated) by EventTime = bin(event_time_t, 15m)",
+        "size": 1,
+        "showAnalytics": true,
+        "title": "Total Query Counts - Selected User (<10 seconds duration) - {UserFocus}",
+        "timeContext": {
+          "durationMs": 604800000
+        },
+        "timeContextFromParameter": "TimeRange",
+        "showExportToExcel": true,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "barchart"
+      },
+      "conditionalVisibility": {
+        "parameterName": "selectedTab",
+        "comparison": "isEqualTo",
+        "value": "QueryDetails"
+      },
+      "customWidth": "100",
+      "showPin": true,
+      "name": "TotalQuerycountBins - User - Copy - Copy"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "AzureDiagnostics\r\n| where Category == 'SQLSecurityAuditEvents' and Resource == \"{dbname}\" \r\n| where duration_milliseconds_d > 0\r\n| where TimeGenerated {TrendTimeRange}\r\n| extend Duration = round(duration_milliseconds_d /1000.0)\r\n| where server_principal_name_s == '{UserFocus}'\r\n| where Duration >10\r\n| extend Duration_bin = case(Duration <= 60, tostring(bin(Duration,10)), Duration <= 600, tostring(bin(Duration,60)), tostring(bin(Duration,600)))\r\n| summarize QueryCount = count(TimeGenerated) by Duration_bin, EventTime = bin(event_time_t, 1h)",
+        "size": 0,
+        "showAnalytics": true,
+        "title": "Trend Total Query Counts - Selected User by Duration bin (>10 seconds duration) - {UserFocus}",
+        "timeContext": {
+          "durationMs": 604800000
+        },
+        "timeContextFromParameter": "TrendTimeRange",
+        "showExportToExcel": true,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "barchart"
+      },
+      "conditionalVisibility": {
+        "parameterName": "selectedTab",
+        "comparison": "isEqualTo",
+        "value": "QueryDetails"
+      },
+      "customWidth": "100",
+      "showPin": true,
+      "name": "TotalQuerycountBins - User"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "AzureDiagnostics\r\n| where Category == 'SQLSecurityAuditEvents' and Resource == \"{dbname}\" \r\n| where duration_milliseconds_d > 0\r\n| where TimeGenerated {TrendTimeRange}\r\n| extend Duration = round(duration_milliseconds_d /1000.0)\r\n| where server_principal_name_s == '{UserFocus}'\r\n| where Duration >10\r\n| extend Duration_bin = case(Duration <= 60, tostring(bin(Duration,10)), Duration <= 600, tostring(bin(Duration,60)), tostring(bin(Duration,600)))\r\n| summarize QueryCount = count(TimeGenerated) by Duration_bin, EventTime = bin(event_time_t, 1d)",
+        "size": 0,
+        "showAnalytics": true,
+        "title": "Trend Total Query Counts Daily - Selected User by Duration bin (>10 seconds duration) - {UserFocus}",
+        "timeContext": {
+          "durationMs": 604800000
+        },
+        "timeContextFromParameter": "TrendTimeRange",
+        "showExportToExcel": true,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "barchart"
+      },
+      "conditionalVisibility": {
+        "parameterName": "selectedTab",
+        "comparison": "isEqualTo",
+        "value": "QueryDetails"
+      },
+      "customWidth": "100",
+      "showPin": true,
+      "name": "TotalQuerycountBins - User - Day"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "AzureDiagnostics\r\n| where Category == 'SQLSecurityAuditEvents'  and Resource == \"{dbname}\" \r\n| where duration_milliseconds_d > 0\r\n| where TimeGenerated {TrendTimeRange}\r\n| extend Duration = round(duration_milliseconds_d /1000.0)\r\n| extend TimeBin = case (datetime_part(\"Hour\",TimeGenerated) in (7,8,9,10), \"Time07-11\", datetime_part(\"Hour\",TimeGenerated) in (11,12,13,14,15,16), \"Time11-17\", \"Overnight\")\r\n| where server_principal_name_s == '{UserFocus}'\r\n| summarize QueryDuration = sum(Duration) by EventTime = bin(event_time_t, 1d), TimeBin",
+        "size": 0,
+        "showAnalytics": true,
+        "title": "Trend Total Query Duration Daily - Selected User - {UserFocus}",
+        "timeContext": {
+          "durationMs": 604800000
+        },
+        "timeContextFromParameter": "TrendTimeRange",
+        "showExportToExcel": true,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "barchart"
+      },
+      "conditionalVisibility": {
+        "parameterName": "selectedTab",
+        "comparison": "isEqualTo",
+        "value": "QueryDetails"
+      },
+      "customWidth": "100",
+      "showPin": true,
+      "name": "TotalQuerycountBins - User - Day - Copy"
+    },
+    {
+      "type": 3,
+      "content": {
+        "version": "KqlItem/1.0",
+        "query": "AzureDiagnostics\r\n| where Category == 'SQLSecurityAuditEvents' and Resource == \"{dbname}\"\r\n| where duration_milliseconds_d > 0\r\n| where TimeGenerated {TrendTimeRange}\r\n| extend UserType = case (server_principal_name_s startswith 'prod', 'Engineering', 'User')\r\n| extend TimeBin = case (datetime_part(\"Hour\",TimeGenerated) in (7,8,9,10), \"Time07-11\", datetime_part(\"Hour\",TimeGenerated) in (11,12,13,14,15,16), \"Time11-17\", \"Overnight\")\r\n| extend Duration = round(duration_milliseconds_d /1000.0)\r\n| summarize QueryDuration = sum(Duration) by EventTime = bin(event_time_t, 1d),  strcat(UserType, '-', TimeBin)",
+        "size": 0,
+        "showAnalytics": true,
+        "title": "Total Query Duration Daily - All",
+        "timeContext": {
+          "durationMs": 604800000
+        },
+        "timeContextFromParameter": "TrendTimeRange",
+        "showExportToExcel": true,
+        "queryType": 0,
+        "resourceType": "microsoft.operationalinsights/workspaces",
+        "visualization": "barchart"
+      },
+      "conditionalVisibility": {
+        "parameterName": "selectedTab",
+        "comparison": "isEqualTo",
+        "value": "UserDetails"
+      },
+      "customWidth": "100",
+      "showPin": true,
+      "name": "TotalQuerycountBins - User - Time Periods"
+    }
+  ],
+  "fallbackResourceIds": [
+    "/subscriptions/0655238a-76cd-4f92-bfe7-ca1a600a8f87/resourceGroups/MonitoringRG/providers/Microsoft.OperationalInsights/workspaces/PrimaryOMS"
+  ],
+  "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
+}
