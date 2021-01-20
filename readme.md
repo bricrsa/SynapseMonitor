@@ -13,7 +13,7 @@ Synapse has powerful, simple to implement integration with Log Analytics
 
 ## Why is this useful
 
-Data Management Views (DMVs) in Synapse are very useful in understanding workload, however it many of the underlying datasets only retain the most recent 10k rows, which in busy systems means that current data will expire within hours or days. Log Analytics allows long term retention of this data and trend analysis
+Data Management Views (DMVs) in Synapse are very useful in understanding workload, however many of the underlying datasets only retain the most recent 10k rows, which in busy systems means that current data will expire within hours or days. Log Analytics allows long term retention of this data and trend analysis
 
 ## What can be logged
 
