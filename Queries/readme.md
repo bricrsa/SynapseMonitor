@@ -1,3 +1,7 @@
+Example queries that can be used to understand Synapse operations, grouped by the source log type.
+
+For information on how Diagnostic logs are modified from source, read [here](./Queries/diagnostics_notes.md).
+
 - Audit
     - [succeeded queries](./audit_succeeded_queries.txt)
     - [succeeded queries summary](./audit_succeeded_queries_summary.txt)
