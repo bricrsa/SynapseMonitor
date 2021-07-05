@@ -15,4 +15,5 @@ select top 30 * from [dbo].[Trip] OPTION (LABEL = 'Test Query 2') | select top -
 
 
 >This masking can be quite annoying when trying to understand actual workload. It is not configurable as currently understood.
+
 >It is possible to use labels to mark queries, however these cannot use variables.

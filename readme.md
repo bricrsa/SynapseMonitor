@@ -41,6 +41,21 @@ Users can use various methods to consume this information
 - Logs viewer (portal) - [list of queries](./Queries/readme.md)
 - PowerBI
 
+## Known limitations
+
+Logging
+
+**Masking occurs on data sent to Log Analytics**
+
+Joining Exec Request and Audit
+
+**there is no common key between what is stored for Exec Requests and Audit logs, so it is not possible to directly obtain the Resource Class or detailed query plan for a specific user**
+
+Duplication
+**Duplication can occur in the data. This is unresolved in the current iteration**
+
+Audit Data can 
+
 ## How is data captured to Log Analytics
 
 For Audit logs (including username and summary query information)

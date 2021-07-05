@@ -1,0 +1,114 @@
+let DatabaseName = "synapse-pool-name";
+let UserQueries = AzureDiagnostics
+| where Category == 'SQLSecurityAuditEvents'
+| where duration_milliseconds_d > 0
+//| where Resource == DatabaseName
+| where action_name_s in ("BATCH COMPLETED")
+| where succeeded_s == "true"
+| extend Workload = case (server_principal_name_s !hasprefix 'prod', 'User'  ,'Engineering')
+| extend ResourceClass = case (server_principal_name_s contains 'xlarge', 'xlargerc',case (server_principal_name_s contains '_large', 'largerc', case (server_principal_name_s contains 'medium', 'mediumrc' ,'default')))
+| extend Duration = round(duration_milliseconds_d /1000.0,2)
+| where Duration > 0.2
+| extend TimeBin = bin(originalEventTimestamp_t,1m) ;
+let dwup = AzureMetrics 
+    | where ResourceProvider =='MICROSOFT.SQL' and MetricName == 'dwu_limit'
+    | extend DWUsage = Maximum  
+    | summarize DWU = toint(max(DWUsage)) by Resource, TimeBin = bin(TimeGenerated, 1m);
+let DWUCost = datatable (DWU:int, CostPAYG:decimal, Cost1Yr:decimal, Cost3Yr:decimal ) //per hour costs
+    [100,103.6,65.27,36.26,
+    200,207.20,130.54,72.52,
+    300,310.8,195.80,108.78,
+    400,414.40,261.07,145.04,
+    500,518.00,326.33,181.30,
+    1000,103.60,652.66,362.59,
+    1500,155.40,978.98,543.88,
+    2000,2072.00,1305.31,725.18,
+    2500,2590.0,1600.3164,906.47,
+    3000,3108,1957.96,1087.76,
+    5000,5179.9,3263.27,1812.93,
+    6000,6215.9,3915.92,2175.52,
+    7500,7769.9,4894.9,2719.4,
+    10000,10359.8,6526.53,3625.86
+    ];
+let ResourcePerc = datatable (DWU:int, ResourceClass:string , PercenPlat:decimal)
+    [
+    100,"smallrc",0.25,
+    200,"smallrc",0.125,
+    300,"smallrc",0.08,
+    400,"smallrc",0.0625,
+    500,"smallrc",0.05,
+    1000,"smallrc",0.03,
+    1500,"smallrc",0.03,
+    2000,"smallrc",0.03,
+    2500,"smallrc",0.03,
+    3000,"smallrc",0.03,
+    5000,"smallrc",0.03,
+    6000,"smallrc",0.03,
+    7500,"smallrc",0.03,
+    10000,"smallrc",0.03,
+    15000,"smallrc",0.03,
+    30000,"smallrc",0.03,
+    100,"mediumrc",0.25,
+    200,"mediumrc",0.125,
+    300,"mediumrc",0.1,
+    400,"mediumrc",0.1,
+    500,"mediumrc",0.1,
+    1000,"mediumrc",0.1,
+    1500,"mediumrc",0.1,
+    2000,"mediumrc",0.1,
+    2500,"mediumrc",0.1,
+    3000,"mediumrc",0.1,
+    5000,"mediumrc",0.1,
+    6000,"mediumrc",0.1,
+    7500,"mediumrc",0.1,
+    10000,"mediumrc",0.1,
+    15000,"mediumrc",0.1,
+    30000,"mediumrc",0.1,
+    100,"largerc",0.25,
+    200,"largerc",0.22,
+    300,"largerc",0.22,
+    400,"largerc",0.22,
+    500,"largerc",0.22,
+    1000,"largerc",0.22,
+    1500,"largerc",0.22,
+    2000,"largerc",0.22,
+    2500,"largerc",0.22,
+    3000,"largerc",0.22,
+    5000,"largerc",0.22,
+    6000,"largerc",0.22,
+    7500,"largerc",0.22,
+    10000,"largerc",0.22,
+    15000,"largerc",0.22,
+    30000,"largerc",0.22,
+    100,"xlargerc",0.7,
+    200,"xlargerc",0.7,
+    300,"xlargerc",0.7,
+    400,"xlargerc",0.7,
+    500,"xlargerc",0.7,
+    1000,"xlargerc",0.7,
+    1500,"xlargerc",0.7,
+    2000,"xlargerc",0.7,
+    2500,"xlargerc",0.7,
+    3000,"xlargerc",0.7,
+    5000,"xlargerc",0.7,
+    6000,"xlargerc",0.7,
+    7500,"xlargerc",0.7,
+    10000,"xlargerc",0.7,
+    15000,"xlargerc",0.7,
+    30000,"xlargerc",0.7,
+    ];
+UserQueries
+| join kind = inner
+    dwup
+on TimeBin
+| join kind = leftouter
+    DWUCost
+on DWU
+| join kind = leftouter
+    ResourcePerc
+on DWU, ResourceClass
+| extend HourCost = CostPAYG, EventID = event_id_g
+| project ResourceClass, HourCost, PercenPlat, QuerySource = application_name_s, Workload, DWU, DurationSeconds = Duration
+    , query = statement_s,  EventTime = event_time_t, Rows = affected_rows_d+ response_rows_d
+    , EstimateQueryCost_pence = round(Duration * (HourCost/3600.0) * PercenPlat ,2), EventID
+| summarize EventCount = count(EventID) by DWU, ResourceClass, TimeBin =bin(EventTime,1h)

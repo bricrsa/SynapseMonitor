@@ -9,9 +9,9 @@ let requestid = AzureDiagnostics
 | where ResourceProvider == "MICROSOFT.SQL" 
 | where Category == "ExecRequests" and StatementType_s != 'Batch' 
     and StatementType_s !in ("Execute", "Batch","DropExternalTable", "DropExternalDataSource", "DropCredential",  "DropExternalFileFormat", "SetStatement",
-                "Print", "CreateCredential"," BeginTransaction", "Commit", "CreateExternalDataSource", "CreateExternalFileFormat",  "CreateExternalTable")  
+                "Print", "CreateCredential","BeginTransaction","Rollback", "Commit", "CreateExternalDataSource", "CreateExternalFileFormat",  "CreateExternalTable")  
 | where Resource == DatabaseName
-| where isnotempty(Command_s) 
+| where isnotempty(Command_s) and isempty(RootQueryId_s) and isnotempty(StatementType_s)
 | summarize by Query= Command_s , RequestId_s;
 requestid
 | join kind = inner 
@@ -21,10 +21,8 @@ requestid
     | where Resource == DatabaseName
     | where Category == "ExecRequests" 
             and Status_s in ("Cancelled", "Failed", "Completed") 
-            and StartTime_t >= todatetime('2020-01-01' )
+            and StartTime_t != datetime("01-01-1601")
 ) on RequestId_s
-| where  EndTime_t >= todatetime('2021-01-13T13:00:00Z') and EndTime_t < todatetime('2021-01-13T13:05:00Z')	
 | extend ResClass = ResourceClass_s
 | project Duration = round((datetime_diff('Millisecond', EndTime_t, StartTime_t)/1000.0),2), StartTime= StartTime_t, EndTime=EndTime_t
     , RequestId= RequestId_s,SessionId = SessionId_s, Query, StatementType_s, Duration_ms = datetime_diff('Millisecond', EndTime_t, StartTime_t)
-| where Duration_ms > 750

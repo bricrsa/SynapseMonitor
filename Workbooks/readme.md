@@ -34,3 +34,9 @@ This workbook requires Audit data
  ![Tab 1: Workload Over Time](/media/WorkloadUn_QueryDetails_obs.png)
  ![Tab 2: User Query Activity](/media/WorkloadUn_Activity_obs.png)
 
+
+**Synapse Query Cost Understanding**
+
+Note that this is experimental and should be used for guidance purposes only.
+
+More detailed explanations [here](/Queries/readme_cost.md)

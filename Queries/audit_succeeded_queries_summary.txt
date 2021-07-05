@@ -7,7 +7,7 @@ let DatabaseName = "synapse_name";
 AzureDiagnostics
 | where Category == 'SQLSecurityAuditEvents'
 | where duration_milliseconds_d > 0
-| where Resource == DatabaseName
+| where toupper(database_name_s) == DatabaseName
 | where action_name_s in ("BATCH COMPLETED")
 | where succeeded_s == "true"
 | extend Workload = case (database_principal_name_s !hasprefix 'prod', 'User'  ,'Engineering')
