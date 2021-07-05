@@ -2,6 +2,8 @@
 
 Synapse has powerful, simple to implement integration with Log Analytics.
 
+It is critical to understand the environment and how users interact with it. This helps administrators optimise queries and costs, track activity over time and users can understand their queries better.
+
 ## **Contents**
 - [Why is this useful](#why-is-this-useful)
 - [What can be logged](#what-can-be-logged)
@@ -10,6 +12,7 @@ Synapse has powerful, simple to implement integration with Log Analytics.
     - Logs viewer (portal) - [list of queries](./Queries/readme.md)
     - PowerBI
 - [How is data captured to Log Analytics](#how-is-data-captured-to-log-analytics)
+- [Cost Analysis](./Queries/readme_cost.md)
 
 ## Why is this useful
 
@@ -43,18 +46,17 @@ Users can use various methods to consume this information
 
 ## Known limitations
 
-Logging
+**Logging**
 
-**Masking occurs on data sent to Log Analytics**
+*Masking occurs on data sent to Log Analytics*
 
-Joining Exec Request and Audit
+**Joining Exec Request and Audit**
 
-**there is no common key between what is stored for Exec Requests and Audit logs, so it is not possible to directly obtain the Resource Class or detailed query plan for a specific user**
+*there is no common key between what is stored for Exec Requests and Audit logs, so it is not possible to directly obtain the Resource Class or detailed query plan for a specific user*
 
-Duplication
-**Duplication can occur in the data. This is unresolved in the current iteration**
+**Duplication**
 
-Audit Data can 
+*Duplication can occur in the data. This is unresolved in the current iteration*
 
 ## How is data captured to Log Analytics
 
