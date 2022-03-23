@@ -1,3 +1,9 @@
+//Succeeded Queries with Duration - Summary
+//By Source and time
+//Workload classified with case statement using simple rule for user name
+//REQUIRES: Audit
+
+
 SQLSecurityAuditEvents
 | where Category == 'SQLSecurityAuditEvents'
 | where DurationMs >= 0

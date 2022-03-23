@@ -1,7 +1,25 @@
+//Succeeded Queries with Duration
+//By Source and time
+//Workload classified with case statement using simple rule for user name
+//REQUIRES: Audit
 
 SQLSecurityAuditEvents
 | where Category == 'SQLSecurityAuditEvents'
 | where DurationMs >= 0
+| where ActionName in ("BATCH COMPLETED")
+| where Succeeded == "true"
+| extend DatabaseType = case (LogicalServerName hassuffix 'ondemand', 'Serverless Pool'  ,'Dedicated Pool')
+| extend Workload = case (DatabasePrincipalName !hasprefix 'prod', 'User'  ,'Engineering')
+| extend Duration = round(DurationMs /1000.0,2)
+| project QuerySource = case(isempty(parse_json(ApplicationName).app_name), ApplicationName, parse_json(ApplicationName).app_name), Workload, DatabaseType, DurationSeconds = Duration, query = Statement,  EventTime, HostName, DatabaseName
+
+
+
+let Database_Name = "synapse_pool_name";
+SQLSecurityAuditEvents
+| where Category == 'SQLSecurityAuditEvents'
+| where DurationMs >= 0
+| where DatabaseName == Database_Name
 | where ActionName in ("BATCH COMPLETED")
 | where Succeeded == "true"
 | extend DatabaseType = case (LogicalServerName hassuffix 'ondemand', 'Serverless Pool'  ,'Dedicated Pool')
