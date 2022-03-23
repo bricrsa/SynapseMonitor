@@ -1,0 +1,18 @@
+//Queries with repeat info
+//with Average Duration and Total Duration
+//By Source and day
+//Workload classified with case statement using simple rule for user name
+//REQUIRES: Audit
+
+let QueryString = "searchstring";
+SQLSecurityAuditEvents
+| where Category == 'SQLSecurityAuditEvents'
+| where DurationMs >= 0
+| where Succeeded == "true"
+| where Statement has QueryString
+| extend DatabaseType = case (LogicalServerName hassuffix 'ondemand', 'Serverless Pool'  ,'Dedicated Pool')
+| extend Workload = case (DatabasePrincipalName !hasprefix 'prod', 'User'  ,'Engineering')
+| extend Duration = round(DurationMs /1000.0,2)
+| project QuerySource = ApplicationName, Workload, DatabaseType, DurationSeconds = Duration, query = Statement,  EventTime, HostName, DatabaseName
+| summarize QueryCount = count(EventTime) by DatabaseName, DatabaseType, QuerySource, Workload, TimeSlice = bin(EventTime, 1h)
+
