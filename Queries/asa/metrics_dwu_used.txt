@@ -1,0 +1,9 @@
+//DWU provisioned for last 6 days
+//max agg every 15 minutes
+//REQUIRES: diagnosticsettings: metrics
+
+AzureMetrics
+    | where TimeGenerated > ago(6d) 
+    | where ResourceProvider == 'MICROSOFT.SQL' and MetricName == 'dwu_limit'
+    | extend DWUsage = Maximum  
+    | summarize max(DWUsage) by Resource, TimeSlice = bin(TimeGenerated, 15m);

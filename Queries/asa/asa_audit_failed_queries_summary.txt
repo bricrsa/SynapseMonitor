@@ -1,0 +1,14 @@
+//Failed Queries with Duration
+//By Source and time
+//Workload classified with case statement using simple rule for user name
+//REQUIRES: Audit
+
+SQLSecurityAuditEvents
+| where Category == 'SQLSecurityAuditEvents'
+| where DurationMs >= 0
+| where Succeeded == "false"
+| extend DatabaseType = case (LogicalServerName hassuffix 'ondemand', 'Serverless Pool'  ,'Dedicated Pool')
+| extend Workload = case (DatabasePrincipalName !hasprefix 'prod', 'User'  ,'Engineering')
+| extend Duration = round(DurationMs /1000.0,2)
+| project QuerySource = ApplicationName, Workload, DatabaseType, DurationSeconds = Duration, query = Statement,  EventTime, HostName, DatabaseName
+| summarize QueryCount = count(EventTime) by DatabaseName, DatabaseType, QuerySource, Workload, TimeSlice = bin(EventTime, 1h)

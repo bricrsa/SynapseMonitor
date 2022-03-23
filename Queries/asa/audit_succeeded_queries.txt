@@ -1,0 +1,18 @@
+//Succeeded Queries with Duration
+//By Source and time
+//Workload classified with case statement using simple rule for user name
+//NOTE: No delete queries show up? No UPDATE STATS? Data is not directly comparable to ExecRequests
+//EventTime == Query end time
+//REQUIRES: Audit
+
+let DatabaseName = "synapse_name";
+AzureDiagnostics
+| where Category == 'SQLSecurityAuditEvents'
+| where duration_milliseconds_d > 0
+| where toupper(database_name_s) == DatabaseName
+| where action_name_s in ("BATCH COMPLETED")
+| where succeeded_s == "true"
+| extend Workload = case (database_principal_name_s !hasprefix 'prod', 'User'  ,'Engineering')
+| extend Duration = round(duration_milliseconds_d /1000.0,2)
+| where Duration > 1
+| project QuerySource = application_name_s, Workload, DurationSeconds = Duration, query = statement_s,  EventTime = event_time_t, Rows = affected_rows_d+ response_rows_d

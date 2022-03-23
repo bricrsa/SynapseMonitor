@@ -1,0 +1,10 @@
+SQLSecurityAuditEvents
+| where Category == 'SQLSecurityAuditEvents'
+| where DurationMs >= 0
+| where ActionName in ("BATCH COMPLETED")
+| where Succeeded == "true"
+| extend DatabaseType = case (LogicalServerName hassuffix 'ondemand', 'Serverless Pool'  ,'Dedicated Pool')
+| extend Workload = case (DatabasePrincipalName !hasprefix 'prod', 'User'  ,'Engineering')
+| extend Duration = round(DurationMs /1000.0,2)
+| project QuerySource = case(isempty(parse_json(ApplicationName).app_name), ApplicationName, parse_json(ApplicationName).app_name), Workload, DatabaseType, DurationSeconds = Duration, query = Statement,  EventTime, HostName, DatabaseName
+| summarize QueryCount = count(EventTime) by DatabaseName, DatabaseType, QuerySource, Workload, TimeSlice = bin(EventTime, 1h)

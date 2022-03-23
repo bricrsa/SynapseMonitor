@@ -1,4 +1,4 @@
-//Succeeded Queries with Duration
+//Failed Queries with Duration
 //By Source and time
 //Workload classified with case statement using simple rule for user name
 //REQUIRES: Audit
@@ -7,9 +7,9 @@ let DatabaseName = "synapse-pool-name";
 AzureDiagnostics
 | where Category == 'SQLSecurityAuditEvents'
 | where duration_milliseconds_d > 0
-| where succeeded_s == "false"
 | where Resource == DatabaseName
 | where action_name_s in ("BATCH COMPLETED")
+| where succeeded_s == "false"
 | extend Workload = case (database_principal_name_s !hasprefix 'prod', 'User'  ,'Engineering')
 | extend Duration = round(duration_milliseconds_d /1000.0)
 | where Duration > 1

@@ -1,0 +1,26 @@
+//Queries with Duration
+//NOTE: Lots more queries show up here compared to Audit
+//REQUIRES: ExecRequests
+
+// DatabaseName is  _ResourceId
+let DatabaseName = "/subscriptions/{subid}/resourcegroups/{rgname}/providers/microsoft.synapse/workspaces/{workspacename}}/sqlpools/{poolname}";
+let requestid = SynapseSqlPoolExecRequests
+| where Category == "ExecRequests" and StatementType != 'Batch' 
+    and StatementType !in ("Execute", "Batch","DropExternalTable", "DropExternalDataSource", "DropCredential",  "DropExternalFileFormat", "SetStatement",
+                "Print", "CreateCredential","BeginTransaction","Rollback", "Commit", "CreateExternalDataSource", "CreateExternalFileFormat",  "CreateExternalTable")  
+| where _ResourceId == DatabaseName
+| where isnotempty(Command) and isempty(RootQueryId) and isnotempty(StatementType)
+| summarize by Query= Command , RequestId;
+requestid
+| join kind = inner 
+(
+    SynapseSqlPoolExecRequests
+    | where _ResourceId == DatabaseName
+    | where Category == "ExecRequests" 
+            and Status in ("Cancelled", "Failed", "Completed") 
+            and StartTime != datetime("01-01-1601")
+) on RequestId
+| extend ResClass = ResourceClass
+| project Duration = round((datetime_diff('Millisecond', EndTime, StartTime)/1000.0),2), StartTime= StartTime, EndTime=EndTime
+    , RequestId,  Query, StatementType, Duration_ms = datetime_diff('Millisecond', EndTime, StartTime)
+| summarize TotalDuration = sum(Duration), AvgDuration = avg(Duration), QueryCount = count(RequestId) by QueryType = StatementType, BinEndHour = bin(EndTime, 1h)

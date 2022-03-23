@@ -1,0 +1,41 @@
+//General metrics for last 6 days
+//max agg every 1 minute
+//REQUIRES: diagnosticsettings: metrics
+AzureMetrics 
+| where ResourceProvider =='MICROSOFT.SQL' 
+| extend wlg_active_queries_total = case(MetricName == "wlg_active_queries", Total, 0.0)
+    , wlg_active_queries_count = case(MetricName == "wlg_active_queries", Count, 0.0)
+    , wlg_queued_queries_total = case(MetricName == "wlg_queued_queries", Total, 0.0)
+    , wlg_queued_queries_count = case(MetricName == "wlg_queued_queries", Count, 0.0)
+    , wlg_active_queries_timeouts_total = case(MetricName == "wlg_active_queries_timeouts", Total, 0.0)
+    , wlg_active_queries_timeouts_count = case(MetricName == "wlg_active_queries_timeouts", Count, 0.0)
+| summarize wlg_active_queries_total = round(max(wlg_active_queries_total),0)
+    , wlg_active_queries_count = round(max(wlg_active_queries_count) ,0)
+    , wlg_queued_queries_total = round(max(wlg_queued_queries_total) ,0)
+    , wlg_queued_queries_count = round(max(wlg_queued_queries_count) ,0)
+    , wlg_active_queries_timeouts_total = round(max(wlg_active_queries_timeouts_total) ,0)
+    , wlg_active_queries_timeouts_count = round(max(wlg_active_queries_timeouts_count) ,0)
+    by bin(TimeGenerated,1m)
+|render timechart 
+
+
+//General metrics for last 6 days
+//max agg every 1 minute
+//REQUIRES: diagnosticsettings: metrics
+AzureMetrics 
+| where ResourceProvider =='MICROSOFT.SQL' 
+| extend cpu_avg = case(MetricName == "cpu_percent", Average, 0.0)
+    , cpu_max = case(MetricName == "cpu_percent", Maximum, 0.0)
+    , memory_usage_percent_avg = case(MetricName == "memory_usage_percent", Average, 0.0)
+    , memory_usage_percent_max = case(MetricName == "memory_usage_percent", Maximum, 0.0)
+    , dwu_limit = case(MetricName == "dwu_limit", Maximum, 0.0)
+    , cache_hit_percent_max = case(MetricName == "cache_hit_percent", Maximum, 0.0)
+    , dwu_consumption_percent = case(MetricName == "dwu_consumption_percent", Maximum, 0.0)
+| summarize cpu_percent_average = round(avg(cpu_avg),0)
+    , cpu_percent_maximum = round(max(cpu_max) ,0)
+    , memory_usage_percent_avg = round(avg(memory_usage_percent_avg) ,0)
+    , memory_usage_percent_max = round(max(memory_usage_percent_max) ,0)
+    , dwu_consumption_percent = round(max(dwu_consumption_percent) ,0)
+    , cache_hit_percent_max = round(max(cache_hit_percent_max) ,0)
+    by bin(TimeGenerated,1m)
+|render timechart 
